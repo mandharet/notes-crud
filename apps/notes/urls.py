@@ -3,11 +3,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("", views.getListofNotes, name="getListofNotes"),
     path("create", views.create, name="create"),
-    path("{id}", views.getNotebyId, name="getNote"),
+    path("<int:id>", views.getNotebyId, name="getNote"),
     path("share", views.share, name="share"),
-    path("{id}", views.updateNote, name="getNotes"),
-    path("version-history/{id}", views.getVersionHistory, name="getVersions"),
+    path("<int:id>", views.updateNote, name="getNotes"),
+    path("version-history/<int:id>", views.getVersionHistory, name="getVersions"),
 ]
 
 
