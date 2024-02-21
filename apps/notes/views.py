@@ -1,57 +1,68 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 from apps.notes.models import NoteChanges, NoteVersionHistory, NoteMetadata
 from apps.notes.serializers import NoteChangesSerializer, NoteVersionHistorySerializer, NoteMetadataSerializer
-from django.db.models import Subquery, OuterRef, Max, F, CharField, Value, TextField
-from django.db.models.functions import Concat, ConcatPair
+from django.db.models import Max, F
 
 # Create your views here.
 @api_view(['GET'])
 def getListofNotes(request):
-    noteVersionHistoryList = NoteVersionHistory.objects.filter(note_metadata__shared_users=request.user)
-    notesList = NoteChanges.objects.filter(note_version_history__note_metadata__shared_users = request.user)
-    notesList = notesList.order_by('-note_version_history__note_metadata','-note_version_history')
-    # latest_versions = NoteVersionHistory.objects.filter(
-    #     note_metadata__shared_users=request.user
-    # ).values('note_metadata').annotate(latest_timestamp=Max('timestamp'))
-    # latest_note_versions = NoteVersionHistory.objects.filter(note_metadata__shared_users=request.user,timestamp__in=latest_versions.values('latest_timestamp')
-    # )
-    
     latest_versions_per_note = NoteMetadata.objects.filter(
     shared_users=request.user).annotate(latest_version=Max('noteversionhistory__id'))
 
-    # Retrieve all NoteChanges for each latest NoteVersionHistory
     all_changes = NoteChanges.objects.filter(
     note_version_history__in=latest_versions_per_note.values('latest_version'))
+    noteDetailsList = []
+    for lvh in latest_versions_per_note:
+        all_notes = all_changes.filter(note_version_history=lvh.latest_version)
+        textExtract= all_notes.annotate(m=F('text')).values('m')
+        entireNote = '\n'.join([x['m'] for x in textExtract])
+        noteVersion = NoteVersionHistory.objects.filter(id=lvh.latest_version).last()
 
-    grouped_changes = all_changes.values(
-    notemetadata_id=F('note_version_history__note_metadata__id'),
-    notemetadata_text=Concat(
-        'note_version_history__note_metadata__id', Value(': '), 'text',
-        output_field=TextField()
-    )).annotate(
-    all_text=ConcatPair('text', Value('\n'), output_field=TextField())).distinct()
+        noteDetail = {
+            "content":entireNote,
+            "modified-by":noteVersion.user.name,
+            "modified-on":noteVersion.timestamp,
+            "noteId":lvh.id,
+            "owner":lvh.owner.name,
+            "sharedWith":','.join([x.name for x in lvh.shared_users.all()]),
+            "Version-History":lvh.latest_version,
+        }
+        noteDetailsList.append(noteDetail)
 
-    # Now 'grouped_changes' contains the concatenated text for each NoteMetadata
-    for entry in grouped_changes:
-        print(f"NoteMetadata ID: {entry['notemetadata_id']}\nText: {entry['all_text']}\n")
-
-    for i in all_changes:
-        print(i)
-    # print(noteVersionHistoryList)
-    # for i in noteVersionHistoryList:
-    #     print(i)
-    return HttpResponse("Hello, world. getListofNotes View.")
+    return Response(noteDetailsList, status=200)
 
 @api_view(['POST'])
 def create(request):
     return HttpResponse("Hello, world. create View.")
 
 @api_view(['GET'])
-def getNotebyId(request, id):
-    return HttpResponse("Hello, world. getNotebyId View. "+ id)
+def getNotebyId(request, note_id):
+    note_metadata = get_object_or_404(NoteMetadata, id=note_id, shared_users=request.user)
+    latest_version_id = NoteMetadata.objects.filter(
+        id=note_id, shared_users=request.user
+    ).aggregate(latest_version=Max('noteversionhistory__id'))['latest_version']
+
+    all_changes = NoteChanges.objects.filter(note_version_history=latest_version_id)
+    entire_note = '\n'.join(all_changes.values_list('text', flat=True))
+
+    note_version = NoteVersionHistory.objects.filter(id=latest_version_id).last()
+
+    # Prepare the response data
+    note_detail = {
+        "content": entire_note,
+        "modified-by": note_version.user.name,
+        "modified-on": note_version.timestamp,
+        "noteId": note_metadata.id,
+        "owner": note_metadata.owner.name,
+        "sharedWith": ','.join([user.name for user in note_metadata.shared_users.all()]),
+        "Version-History": latest_version_id,
+    }
+
+    return Response(note_detail, status=200)
 
 @api_view(['POST'])
 def share(request):

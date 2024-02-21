@@ -5,9 +5,9 @@ from . import views
 urlpatterns = [
     path("", views.getListofNotes, name="getListofNotes"),
     path("create", views.create, name="create"),
-    path("<int:id>", views.getNotebyId, name="getNote"),
+    path("<int:note_id>", views.getNotebyId, name="getNote"),
     path("share", views.share, name="share"),
-    path("<int:id>", views.updateNote, name="getNotes"),
+    path("<int:note_id>", views.updateNote, name="getNotes"),
     path("version-history/<int:id>", views.getVersionHistory, name="getVersions"),
 ]
 
