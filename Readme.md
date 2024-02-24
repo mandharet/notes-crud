@@ -1,4 +1,4 @@
 
-#### [User Authentication APIs :fa-link: ](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/authapp)
+#### [User Authentication APIs: 🔗](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/authapp)
 
-#### [Notes CRUD APIs :fa-link: ](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/notes)
+#### [Notes CRUD APIs: 🔗](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/notes)
