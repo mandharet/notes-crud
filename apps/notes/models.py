@@ -29,14 +29,14 @@ class NoteChanges(models.Model):
 								
 	# [USER]	
 		
-	# email ++	
+	# username ++	
 	# password	
 		
 		
 	# [noteMetadata]	
 		
 	# id ++	
-	# owner - 1:1 user	
+	# owner - FK user	
 	# shared_user 1:m User	
 		
 	# [NoteVersionHistory]	
