@@ -8,7 +8,7 @@ All endpoints require authentication using Token-based authentication. You need 
 ```http
 Authorization: Token generated_token_here
 ```
-#### [User Authentication APIs :fa-link: ](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/authapp)
+### [User Authentication APIs 🔗 ](https://github.com/mandharet/notes-crud/tree/DEVELOPMENT/apps/authapp#user-authentication-apis)
 
 ------------
 
