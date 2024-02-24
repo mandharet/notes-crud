@@ -1,7 +1,11 @@
 # models.py
 from django.contrib.auth.models import AbstractUser
-from django.db import models
-
+    
 class CustomUser(AbstractUser):
-    name = models.CharField(max_length=30)
+    USERNAME_FIELD = 'username'
 
+    def get_username(self):
+        return self.username
+    
+    def __str__(self) -> str:
+        return self.username
